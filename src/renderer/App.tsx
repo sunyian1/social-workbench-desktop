@@ -12,7 +12,8 @@ import {
   SimpleGrid,
   Text,
   VStack,
-  extendTheme
+  extendTheme,
+  useToast
 } from '@chakra-ui/react';
 import { useWorkbenchStore } from './store';
 import type { PlatformKey } from '../shared/types';

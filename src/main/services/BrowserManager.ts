@@ -163,6 +163,16 @@ export class BrowserManager {
       } catch {
         // Some Electron versions may not allow changing the session UA after initialization.
       }
+      const chromeMajor = chromeUserAgent.match(/Chrome\/(\d+)/)?.[1] ?? '132';
+      const uaPlatform = profile.fingerprint.platform === 'MacIntel' ? '"macOS"' : '"Windows"';
+      view.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+        details.requestHeaders['User-Agent'] = chromeUserAgent;
+        details.requestHeaders['Accept-Language'] = profile.fingerprint.languages?.join(',') ?? profile.fingerprint.language ?? 'zh-CN,zh,en-US,en';
+        details.requestHeaders['sec-ch-ua'] = `"Not A(Brand";v="8", "Chromium";v="${chromeMajor}", "Google Chrome";v="${chromeMajor}"`;
+        details.requestHeaders['sec-ch-ua-mobile'] = '?0';
+        details.requestHeaders['sec-ch-ua-platform'] = uaPlatform;
+        callback({ requestHeaders: details.requestHeaders });
+      });
     }
     await view.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
       callback(['notifications', 'media'].includes(permission));
@@ -188,7 +198,9 @@ export class BrowserManager {
         hostname.endsWith('.facebook.com') ||
         hostname === 'facebook.com' ||
         hostname === 'fbcdn.net' ||
-        hostname.endsWith('.fbcdn.net')
+        hostname.endsWith('.fbcdn.net') ||
+        hostname === 'www.browserscan.net' ||
+        hostname.endsWith('.browserscan.net')
       );
     } catch {
       return false;

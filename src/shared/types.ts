@@ -76,8 +76,8 @@ export const PLATFORMS: PlatformDefinition[] = [
   { key: 'browserscan', name: 'BrowserScan', url: 'https://www.browserscan.net/zh' }
 ];
 
-const chromeVersions = ['122.0.0.0', '123.0.0.0', '124.0.0.0', '125.0.0.0', '126.0.0.0'];
-const profiles = [
+const chromeVersion = '132.0.6834.210';
+const windowsDeviceProfiles = [
   {
     platform: 'Win32',
     os: 'Windows NT 10.0; Win64; x64',
@@ -91,9 +91,9 @@ const profiles = [
   {
     platform: 'Win32',
     os: 'Windows NT 10.0; Win64; x64',
-    language: 'en-US',
-    languages: ['en-US', 'en', 'zh-CN', 'zh'],
-    timezone: 'America/Los_Angeles',
+    language: 'zh-CN',
+    languages: ['zh-CN', 'zh', 'en-US', 'en'],
+    timezone: 'Asia/Shanghai',
     screen: [1536, 864],
     webglVendor: 'Google Inc. (NVIDIA)',
     webglRenderer: 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Direct3D11 vs_5_0 ps_5_0, D3D11)'
@@ -101,22 +101,22 @@ const profiles = [
   {
     platform: 'Win32',
     os: 'Windows NT 10.0; Win64; x64',
-    language: 'en-GB',
-    languages: ['en-GB', 'en', 'en-US'],
-    timezone: 'Europe/London',
+    language: 'zh-CN',
+    languages: ['zh-CN', 'zh', 'en-US', 'en'],
+    timezone: 'Asia/Shanghai',
     screen: [1440, 900],
     webglVendor: 'Google Inc. (AMD)',
     webglRenderer: 'ANGLE (AMD, AMD Radeon RX 580 Direct3D11 vs_5_0 ps_5_0, D3D11)'
   },
   {
-    platform: 'MacIntel',
-    os: 'Macintosh; Intel Mac OS X 10_15_7',
-    language: 'en-US',
-    languages: ['en-US', 'en'],
-    timezone: 'America/New_York',
+    platform: 'Win32',
+    os: 'Windows NT 10.0; Win64; x64',
+    language: 'zh-CN',
+    languages: ['zh-CN', 'zh', 'en-US', 'en'],
+    timezone: 'Asia/Shanghai',
     screen: [1680, 1050],
-    webglVendor: 'Google Inc. (Apple)',
-    webglRenderer: 'ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)'
+    webglVendor: 'Google Inc. (Microsoft)',
+    webglRenderer: 'ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0, D3D11)'
   }
 ] as const;
 
@@ -135,8 +135,7 @@ function pick<T>(items: readonly T[], seed: number): T {
 
 export function createRandomFingerprint(platform: PlatformKey, seed = `${platform}:${Date.now()}:${Math.random()}`): FingerprintConfig {
   const h = hashSeed(seed);
-  const base = pick(profiles, h);
-  const chrome = pick(chromeVersions, h >>> 5);
+  const base = pick(windowsDeviceProfiles, h);
   const cpu = pick([4, 6, 8, 10, 12, 16] as const, h >>> 9);
   const memory = pick([4, 8, 12, 16] as const, h >>> 13);
   const widthJitter = ((h >>> 17) % 5) * 8;
@@ -144,7 +143,7 @@ export function createRandomFingerprint(platform: PlatformKey, seed = `${platfor
   const canvasNoise = `0.${String((h % 900000) + 100000)}`;
   const audioNoise = `0.${String(((h >>> 3) % 900000) + 100000)}`;
   return {
-    userAgent: `Mozilla/5.0 (${base.os}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36`,
+    userAgent: `Mozilla/5.0 (${base.os}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`,
     language: base.language,
     languages: [...base.languages],
     platform: base.platform,

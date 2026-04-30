@@ -8,6 +8,8 @@ describe('BrowserManager network fallback', () => {
     expect(source).toContain('private async loadProfileUrl');
     expect(source).toContain('网页暂时无法打开');
     expect(source).toContain('await this.loadProfileUrl(view, profile)');
+    expect(source).toContain('baseURLForDataURL: profile.startUrl');
+    expect(source).toContain("await view.webContents.loadURL('about:blank').catch(() => undefined)");
     expect(source).not.toContain('await view.webContents.loadURL(profile.startUrl);\n    } else');
   });
 });

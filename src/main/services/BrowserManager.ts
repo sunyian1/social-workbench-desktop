@@ -71,7 +71,7 @@ export class BrowserManager {
       const safeName = this.escapeHtml(profile.name);
       const safeUrl = this.escapeHtml(profile.startUrl);
       const safeMessage = this.escapeHtml(message);
-      await view.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
+      const fallbackHtml = `
         <!doctype html>
         <html lang="zh-CN">
           <head>
@@ -110,7 +110,12 @@ export class BrowserManager {
             </div>
           </body>
         </html>
-      `)}`);
+      `;
+      try {
+        await view.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`, { baseURLForDataURL: profile.startUrl });
+      } catch {
+        await view.webContents.loadURL('about:blank').catch(() => undefined);
+      }
     }
   }
 

@@ -1,7 +1,11 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import log from 'electron-log';
 import { PLATFORMS } from '../shared/types.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { DatabaseService } from './services/DatabaseService.js';
 import { ProfileService } from './services/ProfileService.js';
 import { ProxyService } from './services/ProxyService.js';

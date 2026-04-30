@@ -1,5 +1,9 @@
 import { BrowserView, BrowserWindow, session } from 'electron';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import type { Profile } from '../../shared/types.js';
 import type { ProxyService } from './ProxyService.js';
 import type { ProfileService } from './ProfileService.js';

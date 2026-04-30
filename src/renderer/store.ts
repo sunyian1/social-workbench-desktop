@@ -11,6 +11,7 @@ interface WorkbenchState {
   createProfile(name: string, platform: PlatformKey, proxyId?: string | null): Promise<Profile>;
   removeProfile(id: string): Promise<void>;
   openProfile(id: string): Promise<void>;
+  closeProfile(id: string): Promise<void>;
   closeActive(): Promise<void>;
   createProxy(proxy: CreateProxyInput): Promise<ProxyConfig>;
 }
@@ -54,6 +55,12 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   async openProfile(id) {
     await window.workbench.profiles.open(id);
     set({ activeProfileId: id });
+  },
+  async closeProfile(id) {
+    if (get().activeProfileId === id) {
+      await window.workbench.profiles.closeActive();
+      set({ activeProfileId: undefined });
+    }
   },
   async closeActive() {
     await window.workbench.profiles.closeActive();

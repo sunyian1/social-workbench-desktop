@@ -50,7 +50,7 @@ export class BrowserManager {
     const view = this.views.get(this.activeId);
     if (!view) return;
     const [width, height] = this.mainWindow.getContentSize();
-    view.setBounds({ x: 360, y: 0, width: Math.max(300, width - 360), height });
+    view.setBounds({ x: 58, y: 42, width: Math.max(300, width - 134), height: Math.max(300, height - 42) });
     view.setAutoResize({ width: true, height: true });
   }
 

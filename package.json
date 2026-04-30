@@ -2,7 +2,7 @@
   "name": "social-workbench-desktop",
   "version": "0.1.0",
   "description": "Electron 多账号社媒工作台 MVP：Telegram / Instagram / Facebook / WhatsApp，多账号隔离、独立代理、基础指纹注入。",
-  "main": "dist/main/index.js",
+  "main": "dist/main/main/index.js",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",

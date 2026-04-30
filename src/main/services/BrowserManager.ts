@@ -76,8 +76,13 @@ export class BrowserManager {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
-        devTools: true
+        devTools: process.env.NODE_ENV !== 'production'
       }
+    });
+
+    view.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    view.webContents.on('will-navigate', (event, url) => {
+      if (!this.isAllowedNavigation(url)) event.preventDefault();
     });
     if (profile.fingerprint.userAgent) view.webContents.setUserAgent(profile.fingerprint.userAgent);
     await view.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
@@ -87,5 +92,27 @@ export class BrowserManager {
       view?.webContents.executeJavaScript(buildFingerprintScript(profile.fingerprint)).catch(() => undefined);
     });
     return view;
+  }
+
+  private isAllowedNavigation(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname.toLowerCase();
+      return (
+        hostname === 'web.whatsapp.com' ||
+        hostname.endsWith('.whatsapp.com') ||
+        hostname === 'web.telegram.org' ||
+        hostname.endsWith('.telegram.org') ||
+        hostname === 'www.instagram.com' ||
+        hostname.endsWith('.instagram.com') ||
+        hostname === 'www.facebook.com' ||
+        hostname.endsWith('.facebook.com') ||
+        hostname === 'facebook.com' ||
+        hostname === 'fbcdn.net' ||
+        hostname.endsWith('.fbcdn.net')
+      );
+    } catch {
+      return false;
+    }
   }
 }

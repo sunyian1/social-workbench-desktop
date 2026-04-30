@@ -30,8 +30,19 @@ describe('BrowserScan risk hardening', () => {
     expect(source).toContain('HTMLCanvasElement.prototype.toDataURL');
     expect(source).toContain('HTMLCanvasElement.prototype.toBlob');
     expect(source).toContain('CanvasRenderingContext2D.prototype.getImageData');
+    expect(source).toContain('AudioBuffer.prototype.copyFromChannel');
     expect(source).toContain('OfflineAudioContext.prototype.startRendering');
     expect(source).toContain('Navigator.prototype, \'plugins\'');
     expect(source).toContain('navigator.permissions.query');
+    expect(source).toContain('nativeLike');
+  });
+
+  it('preloads webdriver and chrome shims before page scripts run', () => {
+    const preload = fs.readFileSync(path.join(process.cwd(), 'src/main/preload/profilePreload.cjs'), 'utf8');
+    const manager = fs.readFileSync(path.join(process.cwd(), 'src/main/services/BrowserManager.ts'), 'utf8');
+    expect(preload).toContain('webFrame.executeJavaScript');
+    expect(preload).toContain('navigator, \'webdriver\'');
+    expect(preload).toContain('window.chrome');
+    expect(manager).toContain("'did-start-navigation'");
   });
 });

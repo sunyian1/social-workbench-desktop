@@ -180,6 +180,9 @@ export class BrowserManager {
     view.webContents.on('dom-ready', () => {
       view?.webContents.executeJavaScript(buildFingerprintScript(profile.fingerprint)).catch(() => undefined);
     });
+    view.webContents.on('did-start-navigation', () => {
+      view?.webContents.executeJavaScript(buildFingerprintScript(profile.fingerprint)).catch(() => undefined);
+    });
     return view;
   }
 

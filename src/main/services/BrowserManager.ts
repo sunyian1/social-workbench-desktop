@@ -155,7 +155,15 @@ export class BrowserManager {
     view.webContents.on('will-navigate', (event, url) => {
       if (!this.isAllowedNavigation(url)) event.preventDefault();
     });
-    if (profile.fingerprint.userAgent) view.webContents.setUserAgent(profile.fingerprint.userAgent);
+    const chromeUserAgent = profile.fingerprint.userAgent?.replace(/\s+Electron\/[^\s]+/g, '') ?? profile.fingerprint.userAgent;
+    if (chromeUserAgent) {
+      view.webContents.setUserAgent(chromeUserAgent);
+      try {
+        view.webContents.session.setUserAgent(chromeUserAgent);
+      } catch {
+        // Some Electron versions may not allow changing the session UA after initialization.
+      }
+    }
     await view.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
       callback(['notifications', 'media'].includes(permission));
     });

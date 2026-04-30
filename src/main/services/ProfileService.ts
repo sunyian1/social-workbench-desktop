@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import type Database from 'better-sqlite3';
 import type { CreateProfileInput, Profile } from '../../shared/types.js';
-import { getPlatform } from '../../shared/types.js';
+import { DEFAULT_FINGERPRINTS, getPlatform } from '../../shared/types.js';
 
 const now = () => new Date().toISOString();
 
@@ -40,7 +40,7 @@ export class ProfileService {
     this.db.prepare(`INSERT INTO profiles
       (id, name, platform, start_url, partition_key, proxy_id, fingerprint_json, status, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'idle', ?, ?)`)
-      .run(id, input.name, input.platform, platform.url, partitionKey, input.proxyId ?? null, JSON.stringify(input.fingerprint ?? {}), ts, ts);
+      .run(id, input.name, input.platform, platform.url, partitionKey, input.proxyId ?? null, JSON.stringify({ ...DEFAULT_FINGERPRINTS[input.platform], ...(input.fingerprint ?? {}) }), ts, ts);
     return this.get(id)!;
   }
 

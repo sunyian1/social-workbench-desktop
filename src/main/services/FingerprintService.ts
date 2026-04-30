@@ -13,6 +13,11 @@ export function buildFingerprintScript(config: FingerprintConfig): string {
     define(Navigator.prototype, 'languages', cfg.languages);
     define(Navigator.prototype, 'hardwareConcurrency', cfg.hardwareConcurrency);
     define(Navigator.prototype, 'deviceMemory', cfg.deviceMemory);
+    define(Navigator.prototype, 'webdriver', false);
+    const chromeRuntime = { runtime: {} };
+    try {
+      if (!window.chrome) Object.defineProperty(window, 'chrome', { get: () => chromeRuntime, configurable: true });
+    } catch (_) {}
     if (cfg.timezone && Intl && Intl.DateTimeFormat) {
       const old = Intl.DateTimeFormat.prototype.resolvedOptions;
       Intl.DateTimeFormat.prototype.resolvedOptions = function() {

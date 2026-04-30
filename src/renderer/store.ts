@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { PLATFORMS } from '../shared/types';
-import type { PlatformDefinition, Profile, ProxyConfig, PlatformKey } from '../shared/types';
+import type { CreateProxyInput, PlatformDefinition, Profile, ProxyConfig, PlatformKey } from '../shared/types';
 
 interface WorkbenchState {
   profiles: Profile[];
@@ -8,11 +8,21 @@ interface WorkbenchState {
   platforms: PlatformDefinition[];
   activeProfileId?: string;
   refresh(): Promise<void>;
-  createProfile(name: string, platform: PlatformKey): Promise<void>;
+  createProfile(name: string, platform: PlatformKey, proxyId?: string | null): Promise<Profile>;
   removeProfile(id: string): Promise<void>;
   openProfile(id: string): Promise<void>;
-  createProxy(proxy: { name: string; type: ProxyConfig['type']; host: string; port: number; username?: string; password?: string }): Promise<void>;
+  closeActive(): Promise<void>;
+  createProxy(proxy: CreateProxyInput): Promise<ProxyConfig>;
 }
+
+const defaultFingerprint = {
+  language: 'zh-CN',
+  languages: ['zh-CN', 'zh'],
+  platform: 'Win32',
+  timezone: 'Asia/Shanghai',
+  hardwareConcurrency: 8,
+  deviceMemory: 8
+};
 
 export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   profiles: [],
@@ -26,20 +36,32 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     ]);
     set({ profiles, proxies, platforms });
   },
-  async createProfile(name, platform) {
-    await window.workbench.profiles.create({ name, platform, fingerprint: { language: 'zh-CN', languages: ['zh-CN', 'zh'], platform: 'Win32', timezone: 'Asia/Shanghai', hardwareConcurrency: 8, deviceMemory: 8 } });
+  async createProfile(name, platform, proxyId) {
+    const profile = await window.workbench.profiles.create({
+      name,
+      platform,
+      proxyId: proxyId ?? null,
+      fingerprint: defaultFingerprint
+    });
     await get().refresh();
+    return profile;
   },
   async removeProfile(id) {
     await window.workbench.profiles.remove(id);
+    if (get().activeProfileId === id) set({ activeProfileId: undefined });
     await get().refresh();
   },
   async openProfile(id) {
     await window.workbench.profiles.open(id);
     set({ activeProfileId: id });
   },
+  async closeActive() {
+    await window.workbench.profiles.closeActive();
+    set({ activeProfileId: undefined });
+  },
   async createProxy(proxy) {
-    await window.workbench.proxies.create(proxy);
+    const created = await window.workbench.proxies.create(proxy);
     await get().refresh();
+    return created;
   }
 }));

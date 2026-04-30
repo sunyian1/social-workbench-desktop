@@ -6,17 +6,28 @@ import {
   Button,
   ChakraProvider,
   Checkbox,
+  FormControl,
+  FormLabel,
   HStack,
   IconButton,
   Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Select,
   SimpleGrid,
+  Switch,
   Text,
   VStack,
   extendTheme,
   useToast
 } from '@chakra-ui/react';
 import { useWorkbenchStore } from './store';
-import type { PlatformKey } from '../shared/types';
+import type { PlatformKey, ProxyConfig } from '../shared/types';
 
 const theme = extendTheme({
   fonts: {
@@ -30,10 +41,27 @@ const theme = extendTheme({
         color: '#202633'
       }
     }
+  },
+  components: {
+    Button: {
+      baseStyle: { borderRadius: '4px', fontWeight: 500 }
+    },
+    Input: {
+      variants: {
+        outline: {
+          field: {
+            borderRadius: '3px',
+            _focusVisible: { borderColor: '#ff6b35', boxShadow: '0 0 0 1px #ff6b35' }
+          }
+        }
+      }
+    }
   }
 });
 
-const platformMeta: Record<string, { label: string; desc: string; icon: string; color: string; bg: string }> = {
+type AppMeta = { label: string; desc: string; icon: string; color: string; bg: string };
+
+const platformMeta: Record<string, AppMeta> = {
   whatsapp: { label: 'WhatsApp', desc: '简单、私密、可靠', icon: '☎', color: '#22c55e', bg: '#e9f9ef' },
   'telegram-a': { label: 'Telegram', desc: '快速、安全、免费的通讯体验', icon: '✈', color: '#36a7e8', bg: '#eaf6ff' },
   'telegram-k': { label: 'Telegram K', desc: '备用 Telegram 网页版本', icon: '✈', color: '#229ed9', bg: '#eaf6ff' },
@@ -41,21 +69,23 @@ const platformMeta: Record<string, { label: string; desc: string; icon: string; 
   facebook: { label: 'Facebook', desc: '探索你的热情所在', icon: 'f', color: '#1877f2', bg: '#edf5ff' }
 };
 
-const extraApps = [
+const extraApps: AppMeta[] = [
   { label: 'Line', desc: '允许您创建业务帐户以与客户进行通信', icon: 'LINE', color: '#06c755', bg: '#ecfff5' },
   { label: 'Messenger', desc: '实用性、社交性、表现力', icon: '⚡', color: '#168aff', bg: '#edf7ff' },
   { label: 'Twitter', desc: '加入社交网络获取最新信息和现场新闻', icon: '𝕏', color: '#111827', bg: '#f0f1f3' },
   { label: 'Zalo', desc: '快速地、稳定的、私人的', icon: 'Zalo', color: '#0068ff', bg: '#edf5ff' },
-  { label: 'Tiktok', desc: '专注有趣创意的短视频社交App', icon: '♪', color: '#111827', bg: '#f0f1f3' },
+  { label: 'Tiktok', desc: '专注有趣创意的短视频社交App，年轻人交友的人气社群', icon: '♪', color: '#111827', bg: '#f0f1f3' },
   { label: 'Microsoft Teams', desc: '通话、聊天、协作', icon: 'T', color: '#6264a7', bg: '#f1f1ff' },
   { label: 'Snapchat', desc: '分享生活点滴!', icon: '👻', color: '#facc15', bg: '#fff9db' },
-  { label: 'MetaBusiness', desc: '拓展业务并与更多用户建立联系', icon: '∞', color: '#1877f2', bg: '#edf5ff' },
+  { label: 'LineBusiness', desc: '企业级通讯解决方案', icon: 'L', color: '#06c755', bg: '#ecfff5' },
+  { label: 'MetaBusiness', desc: '借助 Meta Business Suite 拓展业务并与更多用户建立联系', icon: '∞', color: '#1877f2', bg: '#edf5ff' },
+  { label: 'LineWorks', desc: '团队高效协作的智能工作空间', icon: 'W', color: '#12b886', bg: '#ecfff5' },
   { label: 'Discord', desc: '为玩家而建，为所有人服务的聊天社区', icon: '☯', color: '#5865f2', bg: '#f0f2ff' }
 ];
 
 function MiniSidebar() {
   return (
-    <Box w="58px" bg="#ffffff" borderRight="1px solid #e8ebf0" h="100vh" display="flex" flexDirection="column" alignItems="center" py="18px">
+    <Box w="58px" bg="#ffffff" borderRight="1px solid #e8ebf0" h="100vh" display="flex" flexDirection="column" alignItems="center" py="18px" position="relative">
       <Box w="4px" h="42px" bg="#ff6b35" borderRadius="0 8px 8px 0" position="absolute" left="0" top="22px" />
       <VStack spacing="18px" flex="1">
         <Box w="38px" h="38px" borderRadius="12px" bg="#fff1e8" color="#f0642b" display="grid" placeItems="center" fontSize="20px">⌂</Box>
@@ -101,7 +131,15 @@ function ContactCard() {
   );
 }
 
-function AppCard({ app, supported, selected, onSelect }: { app: { label: string; desc: string; icon: string; color: string; bg: string }; supported?: boolean; selected?: boolean; onSelect?: () => void }) {
+function AppIcon({ app, size = 46 }: { app: AppMeta; size?: number }) {
+  return (
+    <Box minW={`${size}px`} w={`${size}px`} h={`${size}px`} borderRadius="full" bg={app.bg} color={app.color} display="grid" placeItems="center" fontWeight="800" fontSize={app.icon.length > 2 ? '12px' : `${Math.round(size * 0.5)}px`}>
+      {app.icon}
+    </Box>
+  );
+}
+
+function AppCard({ app, supported, selected, onSelect }: { app: AppMeta; supported?: boolean; selected?: boolean; onSelect?: () => void }) {
   return (
     <Box
       as="button"
@@ -115,15 +153,15 @@ function AppCard({ app, supported, selected, onSelect }: { app: { label: string;
       p="18px"
       display="flex"
       alignItems="center"
-      opacity={supported ? 1 : 0.68}
+      opacity={supported ? 1 : 0.62}
       cursor={supported ? 'pointer' : 'not-allowed'}
       boxShadow={selected ? '0 0 0 2px rgba(255,107,53,.12)' : 'none'}
       onClick={supported ? onSelect : undefined}
       _hover={supported ? { borderColor: '#ff8a4c', transform: 'translateY(-1px)' } : undefined}
       transition="all .15s ease"
     >
-      <Box minW="46px" h="46px" borderRadius="full" bg={app.bg} color={app.color} display="grid" placeItems="center" fontWeight="800" fontSize={app.icon.length > 2 ? '12px' : '23px'} mr="14px">{app.icon}</Box>
-      <Box minW="0">
+      <AppIcon app={app} />
+      <Box minW="0" ml="14px">
         <HStack spacing="8px">
           <Text fontWeight="700" fontSize="16px">{app.label}</Text>
           {supported && <Badge colorScheme="green" variant="subtle">可用</Badge>}
@@ -134,21 +172,162 @@ function AppCard({ app, supported, selected, onSelect }: { app: { label: string;
   );
 }
 
+function AddAppModal({ platform, onClose }: { platform?: PlatformKey; onClose: () => void }) {
+  const toast = useToast();
+  const { profiles, createProfile, createProxy, openProfile } = useWorkbenchStore();
+  const [remark, setRemark] = useState('');
+  const [useProxy, setUseProxy] = useState(false);
+  const [proxyType, setProxyType] = useState<ProxyConfig['type']>('socks5');
+  const [proxyHost, setProxyHost] = useState('');
+  const [proxyPort, setProxyPort] = useState('');
+  const [proxyUsername, setProxyUsername] = useState('');
+  const [proxyPassword, setProxyPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const meta = platform ? platformMeta[platform] : undefined;
+  const title = meta ? `新增 ${meta.label}` : '新增应用';
+
+  useEffect(() => {
+    setRemark('');
+    setUseProxy(false);
+    setProxyType('socks5');
+    setProxyHost('');
+    setProxyPort('');
+    setProxyUsername('');
+    setProxyPassword('');
+  }, [platform]);
+
+  async function submit() {
+    if (!platform || !meta) return;
+    if (useProxy && (!proxyHost.trim() || !proxyPort.trim())) {
+      toast({ status: 'warning', title: '请填写代理 IP 和端口' });
+      return;
+    }
+    const portNumber = Number(proxyPort);
+    if (useProxy && (!Number.isInteger(portNumber) || portNumber <= 0 || portNumber > 65535)) {
+      toast({ status: 'warning', title: '代理端口不正确' });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let proxyId: string | null = null;
+      if (useProxy) {
+        const proxy = await createProxy({
+          name: `${meta.label} 代理 ${profiles.length + 1}`,
+          type: proxyType,
+          host: proxyHost.trim(),
+          port: portNumber,
+          username: proxyUsername.trim() || undefined,
+          password: proxyPassword || undefined
+        });
+        proxyId = proxy.id;
+      }
+      const finalName = remark.trim() || `${meta.label} ${profiles.filter((p) => p.platform === platform).length + 1}`;
+      const profile = await createProfile(finalName, platform, proxyId);
+      await openProfile(profile.id);
+      toast({ status: 'success', title: `已启动 ${finalName}`, description: useProxy ? '已绑定独立代理 IP。' : '已使用独立浏览器环境。' });
+      onClose();
+    } catch (error) {
+      toast({ status: 'error', title: '启动失败', description: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal isOpen={Boolean(platform)} onClose={onClose} isCentered size="2xl">
+      <ModalOverlay bg="rgba(35,39,47,.42)" />
+      <ModalContent borderRadius="3px" overflow="hidden" boxShadow="0 18px 50px rgba(16,24,40,.18)">
+        <ModalHeader bg="#f36a2f" color="white" fontSize="16px" fontWeight="600" h="48px" display="flex" alignItems="center" py="0">
+          {title}
+        </ModalHeader>
+        <ModalCloseButton color="white" top="8px" />
+        <ModalBody px="34px" pt="30px" pb="24px" minH="330px">
+          <FormControl>
+            <FormLabel fontSize="14px" color="#343b48">备注</FormLabel>
+            <Input value={remark} onChange={(e) => setRemark(e.target.value)} placeholder="请输入备注" borderColor="#f36a2f" _hover={{ borderColor: '#f36a2f' }} />
+          </FormControl>
+
+          <HStack mt="24px" spacing="14px" align="center">
+            <Text fontSize="14px" color="#343b48">独立代理IP</Text>
+            <Switch isChecked={useProxy} onChange={(e) => setUseProxy(e.target.checked)} colorScheme="orange" />
+          </HStack>
+
+          {useProxy && (
+            <Box mt="18px" p="16px" bg="#fafafa" border="1px solid #eef1f5" borderRadius="4px">
+              <HStack spacing="12px" align="start">
+                <FormControl w="130px">
+                  <FormLabel fontSize="13px">代理类型</FormLabel>
+                  <Select value={proxyType} onChange={(e) => setProxyType(e.target.value as ProxyConfig['type'])} bg="white">
+                    <option value="socks5">socks5</option>
+                    <option value="http">http</option>
+                    <option value="https">https</option>
+                    <option value="socks4">socks4</option>
+                  </Select>
+                </FormControl>
+                <FormControl flex="1">
+                  <FormLabel fontSize="13px">代理 IP / Host</FormLabel>
+                  <Input value={proxyHost} onChange={(e) => setProxyHost(e.target.value)} placeholder="例如 1.2.3.4" bg="white" />
+                </FormControl>
+                <FormControl w="120px">
+                  <FormLabel fontSize="13px">端口</FormLabel>
+                  <Input value={proxyPort} onChange={(e) => setProxyPort(e.target.value)} placeholder="8000" bg="white" />
+                </FormControl>
+              </HStack>
+              <HStack mt="12px" spacing="12px">
+                <FormControl>
+                  <FormLabel fontSize="13px">用户名，可不填</FormLabel>
+                  <Input value={proxyUsername} onChange={(e) => setProxyUsername(e.target.value)} bg="white" />
+                </FormControl>
+                <FormControl>
+                  <FormLabel fontSize="13px">密码，可不填</FormLabel>
+                  <Input value={proxyPassword} onChange={(e) => setProxyPassword(e.target.value)} type="password" bg="white" />
+                </FormControl>
+              </HStack>
+            </Box>
+          )}
+        </ModalBody>
+        <ModalFooter bg="white" px="34px" pb="24px" pt="0">
+          <Button variant="outline" borderColor="#dfe3ea" mr="12px" onClick={onClose}>关闭</Button>
+          <Button bg="#f36a2f" color="white" _hover={{ bg: '#e85f25' }} isLoading={submitting} onClick={() => void submit()}>启动应用</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
 function OpenedAppsPanel() {
-  const { profiles, activeProfileId, openProfile, removeProfile, platforms } = useWorkbenchStore();
+  const { profiles, activeProfileId, openProfile, removeProfile, closeActive, platforms, refresh } = useWorkbenchStore();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const platformMap = useMemo(() => new Map(platforms.map((p) => [p.key, p.name])), [platforms]);
+  const allSelected = profiles.length > 0 && selectedIds.length === profiles.length;
+  const selectedFirst = selectedIds[0];
+
+  useEffect(() => {
+    setSelectedIds((ids) => ids.filter((id) => profiles.some((p) => p.id === id)));
+  }, [profiles]);
+
+  async function deleteSelected() {
+    for (const id of selectedIds) await removeProfile(id);
+    setSelectedIds([]);
+  }
+
+  function toggle(id: string) {
+    setSelectedIds((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]);
+  }
 
   return (
     <Box bg="white" border="1px solid #e8ebf0" borderRadius="4px" flex="1" minH="0" p="18px">
-      <HStack justify="space-between" mb="16px">
+      <HStack justify="space-between" mb="16px" align="start">
         <HStack>
           <Text fontWeight="700" fontSize="17px">打开的应用</Text>
-          <IconButton aria-label="refresh" size="xs" variant="ghost" icon={<span>↻</span>} />
+          <IconButton aria-label="refresh" size="xs" variant="ghost" icon={<span>↻</span>} onClick={() => void refresh()} />
         </HStack>
         <HStack spacing="8px">
-          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled>删除</Button>
-          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled>关闭</Button>
-          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled>启动</Button>
+          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled={selectedIds.length === 0} onClick={() => void deleteSelected()}>删除</Button>
+          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled={!activeProfileId} onClick={() => void closeActive()}>关闭</Button>
+          <Button size="sm" variant="outline" borderColor="#dfe3ea" isDisabled={!selectedFirst} onClick={() => selectedFirst && void openProfile(selectedFirst)}>启动</Button>
         </HStack>
       </HStack>
 
@@ -156,30 +335,29 @@ function OpenedAppsPanel() {
         {profiles.length === 0 && <Text color="#98a2b3" fontSize="14px" py="16px">暂无应用，点击左侧应用卡片创建。</Text>}
         {profiles.map((profile) => {
           const meta = platformMeta[profile.platform] ?? platformMeta.whatsapp;
+          const checked = selectedIds.includes(profile.id);
           return (
             <HStack key={profile.id} bg={activeProfileId === profile.id ? '#f4f6f9' : '#fafbfc'} border="1px solid #eef1f5" borderRadius="4px" p="12px" spacing="12px">
-              <Checkbox />
-              <Box w="34px" h="34px" borderRadius="full" bg={meta.bg} color={meta.color} display="grid" placeItems="center" fontWeight="800">{meta.icon}</Box>
+              <Checkbox isChecked={checked} onChange={() => toggle(profile.id)} />
+              <AppIcon app={meta} size={34} />
               <Box flex="1" minW="0">
                 <Text fontWeight="600" noOfLines={1}>{profile.name}</Text>
                 <Text color="#87909d" fontSize="12px">{platformMap.get(profile.platform) ?? profile.platform}</Text>
               </Box>
               <Button size="xs" colorScheme="green" onClick={() => openProfile(profile.id)}>启动</Button>
-              <Button size="xs" variant="ghost" colorScheme="red" onClick={() => removeProfile(profile.id)}>删</Button>
             </HStack>
           );
         })}
       </VStack>
-      <Checkbox mt="16px">全选</Checkbox>
+      <Checkbox mt="16px" isChecked={allSelected} onChange={(e) => setSelectedIds(e.target.checked ? profiles.map((p) => p.id) : [])}>全选</Checkbox>
     </Box>
   );
 }
 
 function Dashboard() {
   const toast = useToast();
-  const { profiles, platforms, activeProfileId, refresh, createProfile } = useWorkbenchStore();
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformKey>('whatsapp');
-  const [name, setName] = useState('');
+  const { platforms, activeProfileId, refresh } = useWorkbenchStore();
+  const [modalPlatform, setModalPlatform] = useState<PlatformKey | undefined>();
 
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -187,14 +365,6 @@ function Dashboard() {
     const meta = platformMeta[p.key] ?? { label: p.name, desc: p.url, icon: p.name[0], color: '#64748b', bg: '#f1f5f9' };
     return { ...meta, key: p.key };
   });
-
-  async function launchPlatform(key: PlatformKey, label: string) {
-    const finalName = name.trim() || `${label} ${profiles.filter((p) => p.platform === key).length + 1}`;
-    setSelectedPlatform(key);
-    await createProfile(finalName, key);
-    setName('');
-    toast({ status: 'success', title: `已创建 ${finalName}`, description: '请在右侧打开的应用中点击启动。' });
-  }
 
   return (
     <Box h="100vh" display="flex" bg="#f3f5f8">
@@ -206,14 +376,13 @@ function Dashboard() {
             <HStack justify="space-between" mb="14px">
               <Text fontSize="20px" fontWeight="700">应用中心</Text>
               <HStack>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="环境名称，可不填" bg="white" borderColor="#e8ebf0" w="220px" size="sm" />
-                <Button size="sm" variant="outline" bg="white" borderColor="#dfe3ea">检查更新</Button>
-                <Button size="sm" colorScheme="orange">全部更新</Button>
+                <Button size="sm" variant="outline" bg="white" borderColor="#dfe3ea" onClick={() => toast({ status: 'info', title: '当前已是最新版本' })}>检查更新</Button>
+                <Button size="sm" colorScheme="orange" onClick={() => toast({ status: 'info', title: '暂无可更新应用' })}>全部更新</Button>
               </HStack>
             </HStack>
             <SimpleGrid columns={{ base: 2, xl: 3 }} spacing="14px">
               {supportedApps.map((app) => (
-                <AppCard key={app.key} app={app} supported selected={selectedPlatform === app.key} onSelect={() => void launchPlatform(app.key, app.label)} />
+                <AppCard key={app.key} app={app} supported onSelect={() => setModalPlatform(app.key)} />
               ))}
               {extraApps.map((app) => <AppCard key={app.label} app={app} />)}
             </SimpleGrid>
@@ -224,7 +393,8 @@ function Dashboard() {
           <OpenedAppsPanel />
         </Box>
       </Box>
-      {activeProfileId && <Box position="fixed" left="58px" right="378px" bottom="18px" h="34px" bg="rgba(255,255,255,.92)" border="1px solid #e8ebf0" borderRadius="4px" px="14px" display="flex" alignItems="center" color="#667085" fontSize="13px">网页视图已在工作区打开；若需要回到应用中心，请关闭当前环境或切换其他环境。</Box>}
+      {activeProfileId && <Box position="fixed" left="76px" right="378px" bottom="18px" h="34px" bg="rgba(255,255,255,.92)" border="1px solid #e8ebf0" borderRadius="4px" px="14px" display="flex" alignItems="center" color="#667085" fontSize="13px">网页视图已打开；右侧可切换/关闭环境。每个应用环境使用独立 Cookie、LocalStorage、IndexedDB 和缓存。</Box>}
+      <AddAppModal platform={modalPlatform} onClose={() => setModalPlatform(undefined)} />
     </Box>
   );
 }

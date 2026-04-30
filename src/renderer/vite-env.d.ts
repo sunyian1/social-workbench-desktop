@@ -10,6 +10,7 @@ declare global {
         update(id: string, patch: Partial<CreateProfileInput>): Promise<Profile>;
         remove(id: string): Promise<boolean>;
         open(id: string): Promise<boolean>;
+        closeActive(): Promise<boolean>;
       };
       proxies: {
         list(): Promise<ProxyConfig[]>;

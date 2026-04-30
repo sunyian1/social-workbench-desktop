@@ -6,7 +6,8 @@ contextBridge.exposeInMainWorld('workbench', {
     create: (input: unknown) => ipcRenderer.invoke('profiles:create', input),
     update: (id: string, patch: unknown) => ipcRenderer.invoke('profiles:update', id, patch),
     remove: (id: string) => ipcRenderer.invoke('profiles:remove', id),
-    open: (id: string) => ipcRenderer.invoke('profiles:open', id)
+    open: (id: string) => ipcRenderer.invoke('profiles:open', id),
+    closeActive: () => ipcRenderer.invoke('profiles:close-active')
   },
   proxies: {
     list: () => ipcRenderer.invoke('proxies:list'),

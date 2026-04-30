@@ -43,7 +43,15 @@ async function createWindow() {
   ipcMain.handle('profiles:create', (_e, input) => profileService.create(input));
   ipcMain.handle('profiles:update', (_e, id, patch) => profileService.update(id, patch));
   ipcMain.handle('profiles:remove', async (_e, id) => { await browserManager?.destroy(id); profileService.remove(id); return true; });
-  ipcMain.handle('profiles:open', async (_e, id) => { await browserManager?.open(id); return true; });
+  ipcMain.handle('profiles:open', async (_e, id) => {
+    try {
+      await browserManager?.open(id);
+      return true;
+    } catch (error) {
+      log.warn('Profile webview open failed, keeping renderer alive', error);
+      return false;
+    }
+  });
   ipcMain.handle('profiles:close-active', () => { browserManager?.hideAll(); return true; });
   ipcMain.handle('proxies:list', () => proxyService.list());
   ipcMain.handle('proxies:create', (_e, input) => proxyService.create(input));

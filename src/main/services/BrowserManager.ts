@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, session } from 'electron';
+import { app, BrowserView, BrowserWindow, session } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -76,7 +76,7 @@ export class BrowserManager {
     const view = new BrowserView({
       webPreferences: {
         partition: profile.partitionKey,
-        preload: path.join(__dirname, '../preload/profilePreload.js'),
+        preload: path.join(app.getAppPath(), 'src/main/preload/profilePreload.cjs'),
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,

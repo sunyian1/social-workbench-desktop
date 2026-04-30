@@ -27,7 +27,7 @@ async function createWindow() {
     minHeight: 680,
     title: 'Social Workbench',
     webPreferences: {
-      preload: path.join(__dirname, 'preload/appPreload.js'),
+      preload: path.join(app.getAppPath(), 'src/main/preload/appPreload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true

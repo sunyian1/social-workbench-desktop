@@ -8,7 +8,8 @@ describe('platform definitions', () => {
       'telegram-k',
       'whatsapp',
       'instagram',
-      'facebook'
+      'facebook',
+      'browserscan'
     ]);
   });
 

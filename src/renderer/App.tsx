@@ -51,7 +51,8 @@ const platformMeta: Record<string, AppMeta> = {
   'telegram-a': { label: 'Telegram', desc: '快速、安全、免费的通讯体验', icon: '✈', color: '#36a7e8', bg: '#eaf6ff' },
   'telegram-k': { label: 'Telegram', desc: '备用 Telegram 网页版本', icon: '✈', color: '#229ed9', bg: '#eaf6ff' },
   instagram: { label: 'Instagram', desc: '与您爱的人朋友创建并分享照片、故事和视频', icon: '◎', color: '#e1306c', bg: '#fff0f6' },
-  facebook: { label: 'Facebook', desc: '探索你的热情所在', icon: 'f', color: '#1877f2', bg: '#edf5ff' }
+  facebook: { label: 'Facebook', desc: '探索你的热情所在', icon: 'f', color: '#1877f2', bg: '#edf5ff' },
+  browserscan: { label: 'BrowserScan', desc: '检测每个账号环境的浏览器指纹差异', icon: 'BS', color: '#2563eb', bg: '#eff6ff' }
 };
 
 const extraApps: AppMeta[] = [

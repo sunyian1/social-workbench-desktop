@@ -25,7 +25,7 @@ async function createWindow() {
     height: 900,
     minWidth: 1000,
     minHeight: 680,
-    title: 'Social Workbench',
+    title: 'XMSCRM 1.2.0',
     webPreferences: {
       preload: path.join(app.getAppPath(), 'src/main/preload/appPreload.cjs'),
       nodeIntegration: false,

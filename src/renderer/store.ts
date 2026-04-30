@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { PLATFORMS } from '../shared/types';
 import type { PlatformDefinition, Profile, ProxyConfig, PlatformKey } from '../shared/types';
 
 interface WorkbenchState {
@@ -16,7 +17,7 @@ interface WorkbenchState {
 export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   profiles: [],
   proxies: [],
-  platforms: [],
+  platforms: PLATFORMS,
   async refresh() {
     const [profiles, proxies, platforms] = await Promise.all([
       window.workbench.profiles.list(),

@@ -11,6 +11,12 @@ function Sidebar() {
   const [platform, setPlatform] = useState<PlatformKey>('whatsapp');
   const platformMap = useMemo(() => new Map(platforms.map((p) => [p.key, p.name])), [platforms]);
 
+  useEffect(() => {
+    if (platforms.length > 0 && !platforms.some((p) => p.key === platform)) {
+      setPlatform(platforms[0].key);
+    }
+  }, [platform, platforms]);
+
   useEffect(() => { void refresh(); }, [refresh]);
 
   async function addProfile() {
@@ -31,8 +37,8 @@ function Sidebar() {
         </FormControl>
         <FormControl>
           <FormLabel fontSize="sm">平台</FormLabel>
-          <Select value={platform} onChange={(e) => setPlatform(e.target.value as PlatformKey)} bg="gray.800">
-            {platforms.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+          <Select value={platform} onChange={(e) => setPlatform(e.target.value as PlatformKey)} bg="gray.800" color="white">
+            {platforms.map((p) => <option key={p.key} value={p.key} style={{ color: 'black' }}>{p.name}</option>)}
           </Select>
         </FormControl>
         <Button colorScheme="blue" onClick={addProfile}>创建账号环境</Button>

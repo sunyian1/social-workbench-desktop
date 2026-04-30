@@ -28,7 +28,9 @@ export class BrowserManager {
       view = await this.createView(profile);
       this.views.set(profileId, view);
       this.mainWindow.addBrowserView(view);
-      await view.webContents.loadURL(profile.startUrl);
+      this.activeId = profileId;
+      this.resizeActive();
+      await this.loadProfileUrl(view, profile);
     } else {
       this.mainWindow.addBrowserView(view);
     }
@@ -59,6 +61,66 @@ export class BrowserManager {
       if (!view.webContents.isDestroyed()) view.webContents.close();
       this.views.delete(profileId);
     }
+  }
+
+  private async loadProfileUrl(view: BrowserView, profile: Profile): Promise<void> {
+    try {
+      await view.webContents.loadURL(profile.startUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const safeName = this.escapeHtml(profile.name);
+      const safeUrl = this.escapeHtml(profile.startUrl);
+      const safeMessage = this.escapeHtml(message);
+      await view.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
+        <!doctype html>
+        <html lang="zh-CN">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>应用加载失败</title>
+            <style>
+              body { margin: 0; font-family: "Microsoft YaHei", Arial, sans-serif; background: #f3f5f8; color: #202633; }
+              .wrap { height: 100vh; display: grid; place-items: center; padding: 32px; box-sizing: border-box; }
+              .card { width: min(680px, 92vw); background: #fff; border: 1px solid #e8ebf0; border-radius: 8px; box-shadow: 0 16px 45px rgba(16,24,40,.10); overflow: hidden; }
+              .head { background: #f36a2f; color: #fff; padding: 14px 20px; font-weight: 600; }
+              .body { padding: 28px 30px; }
+              h1 { margin: 0 0 12px; font-size: 22px; }
+              p { line-height: 1.7; color: #667085; }
+              code { display: block; background: #f8fafc; border: 1px solid #edf0f5; padding: 12px; border-radius: 6px; color: #475467; white-space: pre-wrap; word-break: break-all; }
+              .actions { margin-top: 22px; display: flex; gap: 12px; }
+              button { border: 0; border-radius: 4px; padding: 10px 18px; cursor: pointer; font-size: 14px; }
+              .primary { background: #f36a2f; color: #fff; }
+              .secondary { background: #eef1f5; color: #344054; }
+            </style>
+          </head>
+          <body>
+            <div class="wrap">
+              <div class="card">
+                <div class="head">网页暂时无法打开</div>
+                <div class="body">
+                  <h1>${safeName} 加载失败</h1>
+                  <p>应用环境已创建成功，但当前网络无法连接到目标网站。你可以检查网络、代理或稍后重试。</p>
+                  <code>URL: ${safeUrl}\n错误: ${safeMessage}</code>
+                  <div class="actions">
+                    <button class="primary" onclick="location.href='${safeUrl}'">重新加载</button>
+                    <button class="secondary" onclick="history.back()">返回</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `)}`);
+    }
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 
   private async createView(profile: Profile): Promise<BrowserView> {
